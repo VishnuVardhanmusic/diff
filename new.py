@@ -28,6 +28,30 @@ def extract_main_content(mhtml_content):
             text = element.get_text(strip=True)
             if text:
                 markdown_lines.append(f"{text}\n")
+                
+        elif start_scraping and element.name == 'ul':
+            parent_div = element.find_parent('div')
+            if parent_div:
+                div_text = parent_div.get_text(separator="\n", strip=True)
+                if parent_div.ul:
+                    first_ul = parent_div.ul
+                    before_ul_text = ""
+                    for content in parent_div.contents:
+                        if content == first_ul:
+                            break
+                        if isinstance(content, str):
+                            before_ul_text += content.strip() + " "
+                        elif hasattr(content, 'get_text'):
+                            before_ul_text += content.get_text(strip=True) + " "
+                    if before_ul_text.strip():
+                        markdown_lines.append(before_ul_text.strip() + "\n")
+
+            items = element.find_all('li')
+            for li in items:
+                text = li.get_text(strip=True)
+                if text:
+                    markdown_lines.append(f"- {text}")
+            markdown_lines.append("")  
 
         elif start_scraping and element.name == 'pre':
             code = element.get_text()
